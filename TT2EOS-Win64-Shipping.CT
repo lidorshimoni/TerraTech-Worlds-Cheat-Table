@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="52">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>10</ID>
+      <Description>"God Mode &amp; Unlimited Consumables (Auto-Keep-Alive)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{$lua}
+if syntaxcheck then return end
+[ENABLE]
+if _tt2GodTimer then _tt2GodTimer.destroy() end
+_tt2GodTimer = createTimer(nil)
+_tt2GodTimer.Interval = 300
+_tt2GodTimer.OnTimer = function()
+  local gw = readQword("TT2EOS-Win64-Shipping.exe+743E688")
+  if not gw or gw &lt; 0x10000 then return end
+  local gi = readQword(gw + 0x1B8)
+  local lps = gi and readQword(gi + 0x38)
+  local lp0 = lps and readQword(lps)
+  local pc = lp0 and readQword(lp0 + 0x30)
+  local ps = pc and readQword(pc + 0x298)
+  if not ps or ps &lt; 0x10000 then return end
+  local entHandle = readInteger(ps + 0x3AC)
+  local regPtr = readQword("TT2EOS-Win64-Shipping.exe+719C1A8")
+  local reg = regPtr and readQword(regPtr)
+  local compBase = readQword("TT2EOS-Win64-Shipping.exe+719C1F8")
+  if not reg or not compBase then return end
+
+  local function getComp(handle, poolRva)
+    local slot = reg + (handle &amp; 0xFFFFFF) * 12
+    local pool = readQword("TT2EOS-Win64-Shipping.exe+" .. poolRva)
+    if not pool or pool &lt; 0x10000 then return 0 end
+    local r10 = readInteger(slot + 4, true)
+    local r11 = readQword(pool + 0x28)
+    local r8 = readInteger(r11 + (r10 &gt;&gt; 7) * 4, true)
+    local cur = slot
+    local guard = 0
+    while readInteger(cur + 8) ~= 0 and guard &lt; 16 do
+      guard = guard + 1
+      local nextSlot = reg + (readInteger(cur + 8) &amp; 0xFFFFFF) * 12
+      local r9 = readInteger(nextSlot + 4, true)
+      local edx = readInteger(r11 + (r9 &gt;&gt; 7) * 4, true)
+      if r8 == -1 and edx ~= -1 then r8 = edx; r10 = r9 end
+      cur = nextSlot
+    end
+    if r8 == -1 then return 0 end
+    local elemSize = readInteger(pool + 0x0C, true)
+    return compBase + (r10 &amp; 0x7F) * elemSize + r8
+  end
+
+  local comp1 = getComp(entHandle, "719DA08")
+  if comp1 and comp1 &gt; 0x10000 then
+    local ent2 = readInteger(comp1 + 4)
+    local comp2 = getComp(ent2, "71A36C8")
+    if comp2 and comp2 &gt; 0x10000 then
+      writeBytes(comp2 + 0xC1, 1)
+      writeBytes(comp2 + 0xC2, 1)
+    end
+  end
+end
+_tt2GodTimer.OnTimer()
+
+[DISABLE]
+if _tt2GodTimer then
+  _tt2GodTimer.destroy()
+  _tt2GodTimer = nil
+end
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>14</ID>
+      <Description>"Player Tech God Mode (No Block Damage Hook)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+alloc(newmem, 2048, TT2EOS-Win64-Shipping.exe+20D9FA8)
+label(returnhere)
+
+newmem:
+  push rcx
+  push rdx
+  push r8
+  push r9
+  push r10
+  push r11
+  sub rsp, 20
+  mov ecx, edi
+  call TT2EOS-Win64-Shipping.exe+20EFC10
+  add rsp, 20
+  pop r11
+  pop r10
+  pop r9
+  pop r8
+  pop rdx
+  pop rcx
+  cmp al, 1
+  je TT2EOS-Win64-Shipping.exe+20DA32B
+  test r14b, r14b
+  jne TT2EOS-Win64-Shipping.exe+20D9FDE
+  jmp returnhere
+
+TT2EOS-Win64-Shipping.exe+20D9FA8:
+  jmp newmem
+returnhere:
+
+[DISABLE]
+TT2EOS-Win64-Shipping.exe+20D9FA8:
+  db 45 84 F6 75 31
+dealloc(newmem)
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>15</ID>
+      <Description>"Infinite Tech Cargo (Unlimited Capacity)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+TT2EOS-Win64-Shipping.exe+20F11E0:
+  db B0 01 C3
+TT2EOS-Win64-Shipping.exe+20DDAD7:
+  db EB 10 90
+
+[DISABLE]
+TT2EOS-Win64-Shipping.exe+20F11E0:
+  db 48 83 EC
+TT2EOS-Win64-Shipping.exe+20DDAD7:
+  db 2B 45 0C
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>18</ID>
+      <Description>"Apply Any Snapshot (Bypass Material Check)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+TT2EOS-Win64-Shipping.exe+21E09BD:
+  db 90 90
+TT2EOS-Win64-Shipping.exe+21FE4B0:
+  db 90 90 90 90 90 90
+
+[DISABLE]
+TT2EOS-Win64-Shipping.exe+21E09BD:
+  db 74 07
+TT2EOS-Win64-Shipping.exe+21FE4B0:
+  db 0F 84 FE 02 00 00
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>19</ID>
+      <Description>"Max Cargo Stack Size = 9999"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+TT2EOS-Win64-Shipping.exe+20EF0D0:
+  db B8 0F 27 00 00 C3
+
+[DISABLE]
+TT2EOS-Win64-Shipping.exe+20EF0D0:
+  db 66 89 4C 24 08 53
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>20</ID>
+      <Description>"Unlimited Ammo (Global) [0=Off, 1=On]"</Description>
+      <VariableType>Byte</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+719D9F8</Address>
+      <Offsets>
+        <Offset>9C</Offset>
+        <Offset>20</Offset>
+        <Offset>8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>21</ID>
+      <Description>"Unlimited Booster Fuel (Global) [0=Off, 1=On]"</Description>
+      <VariableType>Byte</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+719D9F8</Address>
+      <Offsets>
+        <Offset>9D</Offset>
+        <Offset>20</Offset>
+        <Offset>8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>22</ID>
+      <Description>"Unlimited Other Consumables (Global) [0=Off, 1=On]"</Description>
+      <VariableType>Byte</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+719D9F8</Address>
+      <Offsets>
+        <Offset>9E</Offset>
+        <Offset>20</Offset>
+        <Offset>8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>23</ID>
+      <Description>"Resource Yield Multiplier (Float, default 1.0)"</Description>
+      <VariableType>Float</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+719D9F8</Address>
+      <Offsets>
+        <Offset>84</Offset>
+        <Offset>20</Offset>
+        <Offset>8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>24</ID>
+      <Description>"Battery / Power Regen Multiplier (Float, default 1.0)"</Description>
+      <VariableType>Float</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+719D9F8</Address>
+      <Offsets>
+        <Offset>A0</Offset>
+        <Offset>20</Offset>
+        <Offset>8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>25</ID>
+      <Description>"Auto-Repair Speed Multiplier (Float, default 1.0)"</Description>
+      <VariableType>Float</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+719D9F8</Address>
+      <Offsets>
+        <Offset>A4</Offset>
+        <Offset>20</Offset>
+        <Offset>8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>26</ID>
+      <Description>"Repair Charges Count (Int32, default 3)"</Description>
+      <VariableType>4 Bytes</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+719D9F8</Address>
+      <Offsets>
+        <Offset>A8</Offset>
+        <Offset>20</Offset>
+        <Offset>8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>27</ID>
+      <Description>"Player Tech Limit Multiplier (Float, default 1.0)"</Description>
+      <VariableType>Float</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+719D9F8</Address>
+      <Offsets>
+        <Offset>AC</Offset>
+        <Offset>20</Offset>
+        <Offset>8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>28</ID>
+      <Description>"Techyard Storage Multiplier (Float, default 1.0)"</Description>
+      <VariableType>Float</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+719D9F8</Address>
+      <Offsets>
+        <Offset>B0</Offset>
+        <Offset>20</Offset>
+        <Offset>8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>29</ID>
+      <Description>"Player Pawn Speed / Time Dilation (Float, default 1.0)"</Description>
+      <VariableType>Float</VariableType>
+      <Address>TT2EOS-Win64-Shipping.exe+743E688</Address>
+      <Offsets>
+        <Offset>64</Offset>
+        <Offset>2D0</Offset>
+        <Offset>30</Offset>
+        <Offset>0</Offset>
+        <Offset>38</Offset>
+        <Offset>1B8</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>30</ID>
+      <Description>"Fast Shooting (Rapid Fire)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+alloc(tt2_rapid_hook, 256)
+alloc(tt2_rapid_orig, 32)
+registersymbol(tt2_rapid_orig)
+
+tt2_rapid_orig:
+  readmem(TT2EOS-Win64-Shipping.exe+201DE4B, 17)
+
+tt2_rapid_hook:
+  push rax
+  push rcx
+  push rdx
+  push r8
+  push r9
+  push r10
+  push r11
+  sub rsp,38
+  vmovss [rsp+20],xmm0
+
+  mov rax,[rbp+20]
+  mov ecx,[rax+r15*4]
+  call TT2EOS-Win64-Shipping.exe+20EFC10
+  cmp al,1
+
+  vmovss xmm0,[rsp+20]
+  lea rsp,[rsp+38]
+  pop r11
+  pop r10
+  pop r9
+  pop r8
+  pop rdx
+  pop rcx
+  pop rax
+
+  je tt2_rapid_skip
+  vmovss [rdi+4C],xmm0
+tt2_rapid_skip:
+  vmovss xmm0,[rax+00000094]
+  vcomiss xmm0,xmm6
+  jmp TT2EOS-Win64-Shipping.exe+201DE5C
+
+TT2EOS-Win64-Shipping.exe+201DE4B:
+  db FF 25 00 00 00 00
+  dq tt2_rapid_hook
+  db 90 90 90
+
+[DISABLE]
+TT2EOS-Win64-Shipping.exe+201DE4B:
+  readmem(tt2_rapid_orig, 17)
+
+unregistersymbol(tt2_rapid_orig)
+dealloc(tt2_rapid_hook)
+dealloc(tt2_rapid_orig)
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>31</ID>
+      <Description>"Maximize All Cargo Stacks (9999)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+if syntaxcheck then return end
+local base = getAddress("TT2EOS-Win64-Shipping.exe")
+local regPtr = readQword(base + 0x719C1A8)
+local compBase = readQword(base + 0x719C1F8)
+local gridPool = readQword(base + 0x71A7268)
+if regPtr and compBase and gridPool and gridPool ~= 0 then
+  local regBase = readQword(regPtr)
+  local function getComp(ent, poolPtrAddr)
+    local pool = readQword(poolPtrAddr)
+    if not pool or pool == 0 then return nil end
+    local idx = ent &amp; 0xFFFFFF
+    local slot = readInteger(regBase + idx * 12 + 4)
+    if not slot or slot &lt; 0 then return nil end
+    local page = math.floor(slot / 128)
+    local sparse = readQword(pool + 0x28)
+    local pageOff = readInteger(sparse + page * 4)
+    if not pageOff or pageOff == -1 or pageOff == 0xFFFFFFFF then return nil end
+    local stride = readInteger(pool + 0x0C)
+    return compBase + pageOff + (slot % 128) * stride
+  end
+  local sparse = readQword(gridPool + 0x28)
+  for page = 0, 1000 do
+    local pageOff = readInteger(sparse + page * 4)
+    if pageOff and pageOff ~= -1 and pageOff ~= 0xFFFFFFFF then
+      local a = compBase + pageOff
+      for s = 0, 127 do
+        local g = a + s * 24
+        local w = readBytes(g + 0x00, 1)
+        local h = readBytes(g + 0x01, 1)
+        local arrOff = readInteger(g + 0x04)
+        local cap = readInteger(g + 0x08)
+        local used = readInteger(g + 0x0C)
+        if w and w &gt; 0 and w &lt;= 16 and h and h &gt; 0 and cap and cap &gt; 0 and cap &lt; 1000 and used and used &lt;= cap then
+          for j = 0, used - 1 do
+            local itemEnt = readInteger(compBase + arrOff + j * 4)
+            local ic = getComp(itemEnt, base + 0x71A71D8)
+            if ic then writeInteger(ic + 0x04, 9999) end
+          end
+        end
+      end
+    end
+  end
+end
+{$asm}
+[DISABLE]
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>32</ID>
+      <Description>"1-Hit Kill / Damage Multiplier (1000x Weapons &amp; Mining)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+alloc(hit_dmg_hook, 64, TT2EOS-Win64-Shipping.exe+2231414)
+label(hit_dmg_mult)
+
+hit_dmg_hook:
+  vmulss xmm0, xmm0, [hit_dmg_mult]
+  vmovaps xmm1, xmm0
+  mov [rsp+28], ebp
+  mov r8, r12
+  mov [rsp+20], eax
+  jmp TT2EOS-Win64-Shipping.exe+2231423
+
+hit_dmg_mult:
+  dd (float)1000.0
+
+TT2EOS-Win64-Shipping.exe+2231414:
+  jmp hit_dmg_hook
+  db 90 90 90 90 90 90 90 90 90 90
+
+[DISABLE]
+TT2EOS-Win64-Shipping.exe+2231414:
+  db C5 F8 28 C8 89 6C 24 28 4D 8B C4 89 44 24 20
+dealloc(hit_dmg_hook)
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>39</ID>
+      <Description>"Unlimited Money (99,999,999)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+if syntaxcheck then return end
+if _tt2MoneyTimer then _tt2MoneyTimer.destroy() _tt2MoneyTimer = nil end
+
+local function getComp(base, e, poolOff)
+  if not e or e == 0 then return nil end
+  local idx = e &amp; 0xFFFFFF
+  local reg = readQword(base + 0x719C1A8)
+  if not reg or reg == 0 then return nil end
+  local entBase = readQword(reg)
+  if not entBase or entBase == 0 then return nil end
+  local entSlot = entBase + idx * 12
+  local alive = readSmallInteger(entSlot)
+  if not alive or alive == 0 then return nil end
+  if readBytes(entSlot + 3, 1) ~= ((e &gt;&gt; 24) &amp; 0xFF) then return nil end
+  local pool = readQword(base + poolOff)
+  if not pool or pool == 0 then return nil end
+  local r11 = readQword(pool + 0x28)
+  local stride = readInteger(pool + 0x0C)
+  local compBase = readQword(base + 0x719C1F8)
+  if not r11 or not stride or not compBase then return nil end
+  local r10 = readInteger(entSlot + 4)
+  local r8 = readInteger(r11 + (r10 &gt;&gt; 7) * 4)
+  while true do
+    if r8 ~= -1 and r8 ~= 0xFFFFFFFF then
+      return compBase + (r8 &amp; 0xFFFFFFFF) + (r10 &amp; 0x7F) * stride
+    end
+    local nextEnt = readInteger(entSlot + 8)
+    if not nextEnt or nextEnt == 0 then return nil end
+    entSlot = entBase + (nextEnt &amp; 0xFFFFFF) * 12
+    r10 = readInteger(entSlot + 4)
+    r8 = readInteger(r11 + (r10 &gt;&gt; 7) * 4)
+  end
+end
+
+local function applyMoney()
+  local base = getAddress("TT2EOS-Win64-Shipping.exe")
+  if not base or base == 0 then return end
+  local gw = readQword(base + 0x743E688)
+  if not gw or gw == 0 then return end
+  local gi = readQword(gw + 0x1B8)
+  if not gi or gi == 0 then return end
+  local lpArr = readQword(gi + 0x38)
+  if not lpArr or lpArr == 0 then return end
+  local lp = readQword(lpArr)
+  if not lp or lp == 0 then return end
+  local pc = readQword(lp + 0x30)
+  if not pc or pc == 0 then return end
+  local ps = readQword(pc + 0x298)
+  if not ps or ps == 0 then return end
+  local ent = readInteger(ps + 0x3AC)
+  local comp1 = getComp(base, ent, 0x71A7780)
+  if not comp1 then return end
+  local curEnt = readInteger(comp1 + 4)
+  local comp2 = getComp(base, curEnt, 0x71A7CE0)
+  if not comp2 then return end
+  local amtOff = readInteger(comp2 + 0x0C)
+  local amtCnt = readInteger(comp2 + 0x10)
+  local compBase = readQword(base + 0x719C1F8)
+  if not amtOff or not amtCnt or amtCnt &lt;= 0 or amtCnt &gt; 32 or not compBase then return end
+  for i = 0, amtCnt - 1 do
+    local addr = compBase + amtOff + i * 4
+    local cur = readInteger(addr)
+    if cur and cur &lt; 99999999 then
+      writeInteger(addr, 99999999)
+    end
+  end
+end
+
+_tt2MoneyTimer = createTimer(nil)
+_tt2MoneyTimer.Interval = 500
+_tt2MoneyTimer.OnTimer = applyMoney
+applyMoney()
+{$asm}
+
+[DISABLE]
+{$lua}
+if syntaxcheck then return end
+if _tt2MoneyTimer then _tt2MoneyTimer.destroy() _tt2MoneyTimer = nil end
+{$asm}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>41</ID>
+      <Description>"Fill Techyard With All Blocks (50 Each) [One-Shot]"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+if syntaxcheck then return end
+local base = getAddress("TT2EOS-Win64-Shipping.exe")
+if not base or base == 0 then return end
+local gw = readQword(base + 0x743E688)
+local gi = gw and readQword(gw + 0x1B8)
+local eng = gi and readQword(gi + 0x20)
+local lp = gi and readQword(readQword(gi + 0x38))
+local pc = lp and readQword(lp + 0x30)
+if not eng or not pc or eng == 0 or pc == 0 then return end
+
+local vt = readQword(eng)
+local slot = vt + 0x2F0
+local orig = readQword(slot)
+local mem = allocateMemory(1024)
+local data = mem + 0x200
+writeInteger(data + 0x00, 0)
+writeQword(data + 0x08, slot)
+writeQword(data + 0x10, orig)
+writeQword(data + 0x18, pc)
+writeQword(data + 0x20, base + 0x205D810)
+writeQword(data + 0x30, 0)
+writeQword(data + 0x38, 0)
+
+autoAssemble(string.format([[
+0x%X:
+  mov al,1
+  xchg [0x%X],al
+  test al,al
+  jnz skip_exec
+  push rax
+  push rcx
+  push rdx
+  push r8
+  push r9
+  push r10
+  push r11
+  push rbx
+  sub rsp,28
+  mov rax,[0x%X]
+  mov rbx,[0x%X]
+  mov [rbx],rax
+  mov rcx,[0x%X]
+  mov edx,50
+  mov r8,0x%X
+  xor r9d,r9d
+  call qword ptr [0x%X]
+  add rsp,28
+  pop rbx
+  pop r11
+  pop r10
+  pop r9
+  pop r8
+  pop rdx
+  pop rcx
+  pop rax
+skip_exec:
+  jmp qword ptr [0x%X]
+]], mem, data, data + 0x10, data + 0x08, data + 0x18, data + 0x30, data + 0x20, data + 0x10))
+
+fullAccess(slot, 8)
+writeQword(slot, mem)
+for i = 1, 20 do sleep(50) if readBytes(data, 1) == 1 then break end end
+writeQword(slot, orig)
+sleep(50)
+deAlloc(mem)
+
+local t = createTimer(nil)
+t.Interval = 100
+t.OnTimer = function(tm)
+  tm.destroy()
+  memrec.Active = false
+end
+{$asm}
+
+[DISABLE]
+</AssemblerScript>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+</CheatTable>
